@@ -3,11 +3,18 @@ package consts
 const (
 	ResourceNvidiaGPU = "nvidia.com/gpu"
 
-	LabelInferenceName = "inference"
+	LabelInferenceName      = "inference"
+	LabelInferenceNamespace = "inference-namespace"
+	LabelBuildName          = "ai.tensorchord.build"
+	LabelName               = "ai.tensorchord.name"
+	LabelNamespace          = "modelz.tensorchord.ai/namespace"
+	LabelServerResource     = "ai.tensorchord.server-resource"
 
-	AnnotationMinReplicas = "ai.tensorchord.scale.min"
-	AnnotationMaxReplicas = "ai.tensorchord.scale.max"
-	AnnotationBuilding    = "ai.tensorchord.building"
+	AnnotationBuilding        = "ai.tensorchord.building"
+	AnnotationDockerImage     = "ai.tensorchord.docker.image"
+	AnnotationControlPlaneKey = "ai.tensorchord.control-plane"
+
+	ModelzAnnotationValue = "modelz"
 
 	TolerationGPU              = "ai.tensorchord.gpu"
 	TolerationNvidiaGPUPresent = "nvidia.com/gpu"

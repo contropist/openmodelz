@@ -106,12 +106,12 @@ export GOFLAGS ?= -count=1
 
 .DEFAULT_GOAL:=build
 
-build: build-local  ## Build the release version of envd
+build: build-local  ## Build the release version
 
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-debug: debug-local  ## Build the debug version of envd
+debug: debug-local  ## Build the debug version
 
 # more info about `GOGC` env: https://github.com/golangci/golangci-lint#memory-usage-of-golangci-lint
 lint: $(GOLANGCI_LINT)  ## Lint GO code
@@ -125,9 +125,6 @@ mockgen-install:
 
 addlicense-install:
 	go install github.com/google/addlicense@latest
-
-sqlc-install:
-	go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
 
 # https://github.com/swaggo/swag/pull/1322, we should use master instead of latest for now.
 swag-install:
@@ -156,7 +153,7 @@ test-local:
 	@go test -tags=$(DASHBOARD_BUILD) -v -race -coverprofile=coverage.out ./...
 
 test:  ## Run the tests
-	@go test -tags=$(DASHBOARD_BUILD) -race -coverpkg=./pkg/... -coverprofile=coverage.out ./...
+	@go test -tags=$(DASHBOARD_BUILD) -race -coverprofile=coverage.out ./...
 	@go tool cover -func coverage.out | tail -n 1 | awk '{ print "Total coverage: " $$3 }'
 
 clean:  ## Clean the outputs and artifacts
@@ -175,8 +172,8 @@ swag: swag-install
 	swag init -g ./cmd/agent/main.go --parseDependency --output ./pkg/docs 
 
 build-image: build-local
-	docker build -t ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/modelz-agent:dev -f Dockerfile ./bin
-	docker push ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/modelz-agent:dev
+	docker build -t ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/openmodelz-agent:dev -f Dockerfile ./bin
+	docker push ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/openmodelz-agent:dev
 
 release:
 	@if [ ! -f ".release-env" ]; then \
@@ -195,6 +192,5 @@ release:
 		goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
 		release --rm-dist
 
-generate: mockgen-install sqlc-install swag
-	# @mockgen -source pkg/query/querier.go -destination pkg/query/mock/mock.go -package mock
-	# @sqlc generate
+generate: mockgen-install swag
+	@mockgen -source pkg/runtime/runtime.go -destination pkg/runtime/mock/mock.go -package mock

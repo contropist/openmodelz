@@ -8,11 +8,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	faasv1 "github.com/tensorchord/openmodelz/ingress-operator/pkg/apis/modelzetes/v1"
-	"github.com/tensorchord/openmodelz/ingress-operator/pkg/client/clientset/versioned/scheme"
-	faasscheme "github.com/tensorchord/openmodelz/ingress-operator/pkg/client/clientset/versioned/scheme"
-	v1 "github.com/tensorchord/openmodelz/ingress-operator/pkg/client/informers/externalversions/modelzetes/v1"
-	listers "github.com/tensorchord/openmodelz/ingress-operator/pkg/client/listers/modelzetes/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -25,6 +20,13 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	klog "k8s.io/klog"
+
+	faasv1 "github.com/tensorchord/openmodelz/ingress-operator/pkg/apis/modelzetes/v1"
+	"github.com/tensorchord/openmodelz/ingress-operator/pkg/client/clientset/versioned/scheme"
+	faasscheme "github.com/tensorchord/openmodelz/ingress-operator/pkg/client/clientset/versioned/scheme"
+	v1 "github.com/tensorchord/openmodelz/ingress-operator/pkg/client/informers/externalversions/modelzetes/v1"
+	listers "github.com/tensorchord/openmodelz/ingress-operator/pkg/client/listers/modelzetes/v1"
+	"github.com/tensorchord/openmodelz/modelzetes/pkg/consts"
 )
 
 const AgentName = "ingress-operator"
@@ -249,11 +251,13 @@ func GetIssuerKind(issuerType string) string {
 }
 
 func MakeAnnotations(fni *faasv1.InferenceIngress, host string) map[string]string {
+	controlPlane, exist := fni.Annotations[consts.AnnotationControlPlaneKey]
 	class := GetClass(fni.Spec.IngressType)
 	specJSON, _ := json.Marshal(fni)
 	annotations := make(map[string]string)
 
 	annotations["ai.tensorchord.spec"] = string(specJSON)
+	inferenceNamespace := fni.Labels[consts.LabelInferenceNamespace]
 
 	if !fni.Spec.BypassGateway {
 		switch class {
@@ -265,16 +269,24 @@ func MakeAnnotations(fni *faasv1.InferenceIngress, host string) map[string]strin
 					"/" + fni.Spec.Function + "/$1"
 				annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 			default:
-				annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/inference/" + fni.Name + ".default" + "/$1"
-				annotations["nginx.ingress.kubernetes.io/ssl-redirect"] = "false"
-				annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
+				// for inference created by modelz apiserver
+				if exist && controlPlane == consts.ModelzAnnotationValue {
+					annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/api/v1/" + fni.Spec.Framework +
+						"/" + fni.Spec.Function + "/$1"
+					annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
+					annotations["nginx.ingress.kubernetes.io/ssl-redirect"] = "false"
+				} else {
+					annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/inference/" + fni.Name + "." + inferenceNamespace + "/$1"
+					annotations["nginx.ingress.kubernetes.io/ssl-redirect"] = "false"
+					annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
+				}
 			}
-
 		}
 	}
 
 	annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = "300"
 	annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = "300"
+	annotations["nginx.ingress.kubernetes.io/proxy-body-size"] = "16m"
 
 	// We use the default certificate for now.
 	// if fni.Spec.UseTLS() {

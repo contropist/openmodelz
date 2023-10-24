@@ -61,7 +61,7 @@ export SHELL := bash
 # It's necessary to set the errexit flags for the bash shell.
 export SHELLOPTS := errexit
 
-PACKAGE_NAME := github.com/tensorchord/envd-server
+PACKAGE_NAME := github.com/tensorchord/openmodelz
 GOLANG_CROSS_VERSION  ?= v1.17.6
 
 # Project main package location (can be multiple ones).
@@ -129,13 +129,6 @@ mockgen-install:
 addlicense-install:
 	go install github.com/google/addlicense@latest
 
-sqlc-install:
-	go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
-
-# https://github.com/swaggo/swag/pull/1322, we should use master instead of latest for now.
-swag-install:
-	go install github.com/swaggo/swag/cmd/swag@v1.8.7
-
 build-local:
 	@for target in $(TARGETS); do                                                      \
 	  CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) go build -tags $(DASHBOARD_BUILD)  -trimpath -v -o $(OUTPUT_DIR)/$${target}     \
@@ -167,19 +160,15 @@ clean:  ## Clean the outputs and artifacts
 	@-rm -vrf ${DEBUG_DIR}
 	@-rm -vrf build dist .eggs *.egg-info
 
-fmt: swag-install ## Run go fmt against code.
+fmt:  ## Run go fmt against code.
 	go fmt ./...
-	swag fmt
 
 vet: ## Run go vet against code.
 	go vet ./...
 
-swag: swag-install
-	swag init -g ./cmd/envd-server/main.go --parseDependency --output ./pkg/docs 
-
 build-image: build-local
 	docker build -t ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/modelz-autoscaler:dev -f Dockerfile ./bin
-	docker push ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/autoscaler:dev
+	docker push ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/modelz-autoscaler:dev
 
 release:
 	@if [ ! -f ".release-env" ]; then \

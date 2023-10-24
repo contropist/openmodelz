@@ -1,9 +1,10 @@
 package consts
 
-const (
-	LabelProjectID = "ai.tensorchord.project"
-	LabelBuildName = "ai.tensorchord.build"
-	LabelName      = "ai.tensorchord.name"
+import "time"
 
-	Domain = "modelz.live"
+const (
+	Domain        = "modelz.live"
+	DefaultPrefix = "modelz-"
+	APIKEY_PREFIX = "mzi-"
 )
+const DefaultAPIServerReadyTimeout = 15 * time.Minute

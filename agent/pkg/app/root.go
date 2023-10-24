@@ -21,7 +21,7 @@ const (
 	flagDev   = "dev"
 
 	// server
-	flagServerPort        = "server-port"
+	flagServerPort         = "server-port"
 	flagServerReadTimeout  = "server-read-timeout"
 	flagServerWriteTimeout = "server-write-timeout"
 
@@ -37,18 +37,20 @@ const (
 	flagIngressDomain        = "ingress-domain"
 	flagIngressNamespace     = "ingress-namespace"
 	flagIngressAnyIPToDomain = "ingress-any-ip-to-domain"
+	flagIngressTLSEnabled    = "ingress-tls-enabled"
 
 	// inference
 	flagInferenceLogTimeout = "inference-log-timeout"
 	flagInferenceCacheTTL   = "inference-cache-ttl"
 
 	// build
-	flagBuildEnabled       = "build-enabled"
-	flagBuilderImage       = "builder-image"
-	flagBuildkitdAddress   = "buildkitd-address"
-	flagBuildCtlBin        = "buildctl-bin"
-	flagBuildRegistry      = "build-registry"
-	flagBuildRegistryToken = "build-registry-token"
+	flagBuildEnabled         = "build-enabled"
+	flagBuilderImage         = "builder-image"
+	flagBuildkitdAddress     = "buildkitd-address"
+	flagBuildCtlBin          = "buildctl-bin"
+	flagBuildRegistry        = "build-registry"
+	flagBuildRegistryToken   = "build-registry-token"
+	flagBuildImagePullSecret = "build-image-pull-secret"
 
 	// metrics
 	flagMetricsPollingInterval = "metrics-polling-interval"
@@ -62,9 +64,17 @@ const (
 	flaglogsLokiUser  = "logs-loki-user"
 	flagLogsLokiToken = "logs-loki-token"
 
-	// db
-	flagEventEnabled = "event-enabled"
-	flagDBURL        = "db-url"
+	// modelz cloud
+	flagModelZCloudEnabled                   = "modelz-cloud-enabled"
+	flagModelZCloudURL                       = "modelz-cloud-url"
+	flagModelZCloudAgentToken                = "modelz-cloud-agent-token"
+	flagModelZCloudAgentHeartbeatInterval    = "modelz-cloud-agent-heartbeat-interval"
+	flagModelZCloudRegion                    = "modelz-cloud-region"
+	flagModelZCloudUnifiedAPIKey             = "modelz-cloud-unified-api-key"
+	flagModelZCloudUpstreamTimeout           = "modelz-cloud-upstream-timeout"
+	flagModelZCloudMaxIdleConnections        = "modelz-cloud-max-idle-connections"
+	flagModelZCloudMaxIdleConnectionsPerHost = "modelz-cloud-max-idle-connections-per-host"
+	flagModelZCloudEventEnabled              = "modelz-cloud-event-enabled"
 )
 
 type App struct {
@@ -90,7 +100,7 @@ func New() App {
 		},
 		&cli.IntFlag{
 			Name:    flagServerPort,
-			Value:   8081,
+			Value:   8080,
 			Usage:   "port to listen on",
 			EnvVars: []string{"MODELZ_AGENT_SERVER_PORT"},
 			Aliases: []string{"p"},
@@ -174,6 +184,13 @@ func New() App {
 			EnvVars: []string{"MODELZ_AGENT_INGRESS_ANY_IP_TO_DOMAIN"},
 			Aliases: []string{"iad"},
 		},
+		&cli.BoolFlag{
+			Name:    flagIngressTLSEnabled,
+			Usage:   "Enable TLS for inference ingress. ",
+			Value:   true,
+			EnvVars: []string{"MODELZ_AGENT_INGRESS_TLS_ENABLED"},
+			Aliases: []string{"it"},
+		},
 		&cli.DurationFlag{
 			Name: flagInferenceLogTimeout,
 			Usage: "Timeout for inference log streaming. " +
@@ -237,6 +254,14 @@ func New() App {
 			EnvVars: []string{"MODELZ_AGENT_BUILD_REGISTRY_TOKEN"},
 			Aliases: []string{"bt"},
 		},
+		&cli.StringFlag{
+			Name:    flagBuildImagePullSecret,
+			Hidden:  true,
+			Usage:   "Image pull secret to use for building models.",
+			EnvVars: []string{"MODELZ_AGENT_BUILD_IMAGE_PULL_SECRET"},
+			Aliases: []string{"bp"},
+			Value:   "dockerhub-secret",
+		},
 		&cli.DurationFlag{
 			Name:    flagMetricsPollingInterval,
 			Usage:   "Interval to poll metrics from kubernetes",
@@ -290,19 +315,72 @@ func New() App {
 			EnvVars: []string{"MODELZ_AGENT_LOGS_LOKI_TOKEN"},
 		},
 		&cli.BoolFlag{
-			Name:    flagEventEnabled,
-			Hidden:  true,
-			Usage:   "Enable event logging",
+			Name:    flagModelZCloudEnabled,
+			Usage:   "Enable modelz cloud, agent as modelz cloud agent",
 			Value:   false,
-			EnvVars: []string{"MODELZ_AGENT_EVENT_ENABLED"},
-			Aliases: []string{"ee"},
+			EnvVars: []string{"MODELZ_AGENT_MODELZ_CLOUD_ENABLED"},
+			Aliases: []string{"mzc"},
 		},
 		&cli.StringFlag{
-			Name:    flagDBURL,
-			Usage:   "Postgres database URL",
-			Hidden:  true,
-			Aliases: []string{"du"},
-			EnvVars: []string{"MODELZ_AGENT_DB_URL"},
+			Name:    flagModelZCloudURL,
+			Usage:   "Modelz cloud URL",
+			EnvVars: []string{"MODELZ_AGENT_MODELZ_CLOUD_URL"},
+			Aliases: []string{"mzu"},
+			Value:   "https://cloud.modelz.ai",
+		},
+		&cli.StringFlag{
+			Name:    flagModelZCloudAgentToken,
+			Usage:   "Modelz cloud agent token",
+			EnvVars: []string{"MODELZ_CLOUD_AGENT_TOKEN"},
+			Aliases: []string{"mzt"},
+		},
+		&cli.DurationFlag{
+			Name:    flagModelZCloudAgentHeartbeatInterval,
+			Usage:   "Modelz cloud agent heartbeat interval",
+			EnvVars: []string{"MODELZ_CLOUD_AGENT_HEARTBEAT_INTERVAL"},
+			Aliases: []string{"mzh"},
+			Value:   time.Minute * 1,
+		},
+		&cli.StringFlag{
+			Name:    flagModelZCloudRegion,
+			Usage:   "Modelz cloud agent region",
+			EnvVars: []string{"MODELZ_CLOUD_AGENT_REGION"},
+			Aliases: []string{"mzr"},
+			Value:   "us-central1",
+		},
+		&cli.StringFlag{
+			Name:    flagModelZCloudUnifiedAPIKey,
+			Usage:   "Modelz cloud agent unified api key",
+			EnvVars: []string{"MODELZ_CLOUD_AGENT_UNIFIED_API_KEY"},
+			Aliases: []string{"mzua"},
+		},
+		&cli.DurationFlag{
+			Name:    flagModelZCloudUpstreamTimeout,
+			Usage:   "upstream timeout",
+			EnvVars: []string{"MODELZ_UPSTREAM_TIMEOUT"},
+			Aliases: []string{"ut"},
+			Value:   300 * time.Second,
+		},
+		&cli.IntFlag{
+			Name:    flagModelZCloudMaxIdleConnections,
+			Usage:   "max idle connections",
+			EnvVars: []string{"MODELZ_MAX_IDLE_CONNECTIONS"},
+			Aliases: []string{"mic"},
+			Value:   1024,
+		},
+		&cli.IntFlag{
+			Name:    flagModelZCloudMaxIdleConnectionsPerHost,
+			Usage:   "max idle connections per host",
+			EnvVars: []string{"MODELZ_MAX_IDLE_CONNECTIONS_PER_HOST"},
+			Aliases: []string{"mich"},
+			Value:   1024,
+		},
+		&cli.BoolFlag{
+			Name:    flagModelZCloudEventEnabled,
+			Usage:   "Enable event logging for modelz cloud.",
+			Value:   false,
+			EnvVars: []string{"MODELZ_AGENT_MODELZ_CLOUD_EVENT_ENABLED"},
+			Aliases: []string{"mze"},
 		},
 	}
 	internalApp.Action = runServer

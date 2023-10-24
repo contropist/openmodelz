@@ -157,16 +157,15 @@ clean:  ## Clean the outputs and artifacts
 	@-rm -vrf ${DEBUG_DIR}
 	@-rm -vrf build dist .eggs *.egg-info
 
-fmt: swag-install ## Run go fmt against code.
+fmt:  ## Run go fmt against code.
 	go fmt ./...
-	swag fmt
 
 vet: ## Run go vet against code.
 	go vet ./...
 
 build-image: build-local
-	docker build -t ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/modelzetes:dev -f Dockerfile ./bin
-	docker push ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/modelzetes:dev
+	docker build -t ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/ingress-operator:dev -f Dockerfile ./bin
+	docker push ${BASE_REGISTRY}/${BASE_REGISTRY_USER}/ingress-operator:dev
 
 release:
 	@if [ ! -f ".release-env" ]; then \

@@ -7,14 +7,33 @@ import (
 )
 
 type Config struct {
-	Server     ServerConfig    `json:"server,omitempty"`
-	KubeConfig KubeConfig      `json:"kube_config,omitempty"`
-	Ingress    IngressConfig   `json:"ingress,omitempty"`
-	Inference  InferenceConfig `json:"inference,omitempty"`
-	Build      BuildConfig     `json:"build,omitempty"`
-	Metrics    MetricsConfig   `json:"metrics,omitempty"`
-	Logs       LogsConfig      `json:"logs,omitempty"`
-	DB         PostgresConfig  `json:"db,omitempty"`
+	Server      ServerConfig      `json:"server,omitempty"`
+	KubeConfig  KubeConfig        `json:"kube_config,omitempty"`
+	Ingress     IngressConfig     `json:"ingress,omitempty"`
+	Inference   InferenceConfig   `json:"inference,omitempty"`
+	Build       BuildConfig       `json:"build,omitempty"`
+	Metrics     MetricsConfig     `json:"metrics,omitempty"`
+	Logs        LogsConfig        `json:"logs,omitempty"`
+	ModelZCloud ModelZCloudConfig `json:"modelz_cloud,omitempty"`
+}
+
+type ModelZCloudConfig struct {
+	Enabled bool `json:"enabled,omitempty"`
+	// URL of apiserver
+	URL                       string            `json:"url,omitempty"`
+	AgentToken                string            `json:"agent_token,omitempty"`
+	HeartbeatInterval         time.Duration     `json:"heartbeat_interval,omitempty"`
+	ID                        string            `json:"id,omitempty"`
+	Name                      string            `json:"name,omitempty"`
+	TokenID                   string            `json:"token_id,omitempty"`
+	Region                    string            `json:"region,omitempty"`
+	APIKeys                   map[string]string `json:"api_keys,omitempty"`
+	UserNamespaces            []string          `json:"user_namespaces,omitempty"`
+	UnifiedAPIKey             string            `json:"unified_api_key,omitempty"`
+	UpstreamTimeout           time.Duration     `json:"upstream_timeout,omitempty"`
+	MaxIdleConnections        int               `json:"max_idle_connections,omitempty"`
+	MaxIdleConnectionsPerHost int               `json:"max_idle_connections_per_host,omitempty"`
+	EventEnabled              bool              `json:"event_enabled,omitempty"`
 }
 
 type LogsConfig struct {
@@ -39,12 +58,13 @@ type MetricsConfig struct {
 }
 
 type BuildConfig struct {
-	BuildEnabled       bool   `json:"build_enabled,omitempty"`
-	BuilderImage       string `json:"builder_image,omitempty"`
-	BuildkitdAddress   string `json:"buildkitd_address,omitempty"`
-	BuildCtlBin        string `json:"build_ctl_bin,omitempty"`
-	BuildRegistry      string `json:"build_registry,omitempty"`
-	BuildRegistryToken string `json:"build_registry_token,omitempty"`
+	BuildEnabled         bool   `json:"build_enabled,omitempty"`
+	BuilderImage         string `json:"builder_image,omitempty"`
+	BuildkitdAddress     string `json:"buildkitd_address,omitempty"`
+	BuildCtlBin          string `json:"build_ctl_bin,omitempty"`
+	BuildRegistry        string `json:"build_registry,omitempty"`
+	BuildRegistryToken   string `json:"build_registry_token,omitempty"`
+	BuildImagePullSecret string `json:"build_image_pull_secret,omitempty"`
 }
 
 type InferenceConfig struct {
@@ -57,6 +77,7 @@ type IngressConfig struct {
 	Domain         string `json:"domain,omitempty"`
 	Namespace      string `json:"namespace,omitempty"`
 	AnyIPToDomain  bool   `json:"any_ip_to_domain,omitempty"`
+	TLSEnabled     bool   `json:"tls_enabled,omitempty"`
 }
 
 type KubeConfig struct {
@@ -65,11 +86,6 @@ type KubeConfig struct {
 	QPS          int           `json:"qps,omitempty"`
 	Burst        int           `json:"burst,omitempty"`
 	ResyncPeriod time.Duration `json:"resync_period,omitempty"`
-}
-
-type PostgresConfig struct {
-	EventEnabled bool   `json:"event_enabled,omitempty"`
-	URL          string `json:"url,omitempty"`
 }
 
 func New() Config {
@@ -104,7 +120,8 @@ func (c Config) Validate() error {
 			c.Build.BuilderImage == "" ||
 			c.Build.BuildRegistryToken == "" ||
 			c.Build.BuildRegistry == "" ||
-			c.Build.BuildCtlBin == "" {
+			c.Build.BuildCtlBin == "" ||
+			c.Build.BuildImagePullSecret == "" {
 			return errors.New("build config is required")
 		}
 	}
@@ -116,18 +133,20 @@ func (c Config) Validate() error {
 		return errors.New("metrics config is required")
 	}
 
-	if c.DB.EventEnabled {
-		if c.DB.URL == "" {
-			return errors.New("db config is required")
-		}
-	}
-
 	if c.Ingress.IngressEnabled {
 		if c.Ingress.Namespace == "" {
 			return errors.New("ingress namespace is required")
 		}
 		if !c.Ingress.AnyIPToDomain && c.Ingress.Domain == "" {
 			return errors.New("ingress domain is required")
+		}
+	}
+
+	if c.ModelZCloud.Enabled {
+		if c.ModelZCloud.URL == "" ||
+			c.ModelZCloud.AgentToken == "" ||
+			c.ModelZCloud.HeartbeatInterval == 0 {
+			return errors.New("modelz cloud config is required")
 		}
 	}
 	return nil

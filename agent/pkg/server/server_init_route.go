@@ -20,10 +20,12 @@ const (
 	endpointNamespacePlural = "/namespaces"
 	endpointHealthz         = "/healthz"
 	endpointBuild           = "/build"
+	endpointImageCache      = "/image-cache"
 )
 
 func (s *Server) registerRoutes() {
 	root := s.router.Group("/")
+	v1 := s.router.Group("/api/v1")
 
 	// swagger
 	root.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -34,6 +36,11 @@ func (s *Server) registerRoutes() {
 	root.Any("/inference/:name/*proxyPath",
 		WrapHandler(s.middlewareCallID),
 		WrapHandler(s.handleInferenceProxy))
+
+	v1.Any("/mosec/:id/*proxyPath", WrapHandler(s.proxyMosec))
+	v1.Any("/gradio/:id/*proxyPath", WrapHandler(s.proxyGradio))
+	v1.Any("/streamlit/:id/*proxyPath", WrapHandler(s.proxyStreamlit))
+	v1.Any("/other/:id/*proxyPath", WrapHandler(s.proxyOther))
 
 	// healthz
 	root.GET(endpointHealthz, WrapHandler(s.handleHealthz))
@@ -69,6 +76,7 @@ func (s *Server) registerRoutes() {
 	// servers
 	controlPlane.GET(endpointServerPlural, WrapHandler(s.handleServerList))
 	controlPlane.POST(endpointServer+"/:name/labels", WrapHandler(s.handleServerLabelCreate))
+	controlPlane.DELETE(endpointServer+"/:name/delete", WrapHandler(s.handleServerDelete))
 
 	// logs
 	controlPlane.GET(endpointLogPlural+endpointInference,
@@ -80,6 +88,8 @@ func (s *Server) registerRoutes() {
 		WrapHandler(s.handleNamespaceList))
 	controlPlane.POST(endpointNamespacePlural,
 		WrapHandler(s.handleNamespaceCreate))
+	controlPlane.DELETE(endpointNamespacePlural,
+		WrapHandler(s.handleNamespaceDelete))
 
 	// TODO(gaocegege): Support secrets
 	// controlPlane.GET("/secrets")
@@ -92,6 +102,9 @@ func (s *Server) registerRoutes() {
 	}
 	// TODO(gaocegege): Support metrics
 	// metrics
+
+	// image cache
+	controlPlane.POST(endpointImageCache, WrapHandler(s.handleImageCacheCreate))
 }
 
 // registerMetricsRoutes registers the metrics routes.

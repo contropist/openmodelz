@@ -14,9 +14,10 @@ import (
 // @Tags        inference
 // @Accept      json
 // @Produce     json
-// @Param       namespace query    string                    true "Namespace"  example("modelz-d3524a71-c17c-4c92-8faf-8603f02f4713")
+// @Param       namespace query    string                    true "Namespace"
 // @Param       request   body     types.ScaleServiceRequest true "query params"
 // @Success     202       {object} []types.ScaleServiceRequest
+// @Failure     400
 // @Router      /system/scale-inference [post]
 func (s *Server) handleInferenceScale(c *gin.Context) error {
 	var req types.ScaleServiceRequest
@@ -31,8 +32,13 @@ func (s *Server) handleInferenceScale(c *gin.Context) error {
 			http.StatusBadRequest, errors.New("namespace is required"), "inference-scale")
 	}
 
+	inf, err := s.runtime.InferenceGet(namespace, req.ServiceName)
+	if err != nil {
+		return errFromErrDefs(err, "inference-scale")
+	}
+
 	if err := s.runtime.InferenceScale(c.Request.Context(),
-		namespace, req); err != nil {
+		namespace, req, inf); err != nil {
 		return errFromErrDefs(err, "inference-scale")
 	}
 

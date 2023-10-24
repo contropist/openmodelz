@@ -16,6 +16,7 @@ import (
 	v2alpha1 "github.com/tensorchord/openmodelz/modelzetes/pkg/apis/modelzetes/v2alpha1"
 	"github.com/tensorchord/openmodelz/modelzetes/pkg/consts"
 	"github.com/tensorchord/openmodelz/modelzetes/pkg/k8s"
+	. "github.com/tensorchord/openmodelz/modelzetes/pkg/pointer"
 )
 
 const (
@@ -92,7 +93,7 @@ func newDeployment(
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelMap,
 			},
-			RevisionHistoryLimit: int32p(5),
+			RevisionHistoryLimit: Ptr(int32(5)),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      labels,
@@ -286,15 +287,6 @@ func makeAnnotations(inference *v2alpha1.Inference) map[string]string {
 		for k, v := range inference.Spec.Annotations {
 			annotations[k] = v
 		}
-	}
-
-	if inference.Spec.Scaling != nil && inference.Spec.Scaling.MinReplicas != nil {
-		annotations[consts.AnnotationMinReplicas] = strconv.Itoa(
-			int(*inference.Spec.Scaling.MinReplicas))
-	}
-	if inference.Spec.Scaling != nil && inference.Spec.Scaling.MaxReplicas != nil {
-		annotations[consts.AnnotationMaxReplicas] = strconv.Itoa(
-			int(*inference.Spec.Scaling.MaxReplicas))
 	}
 
 	// save inference spec in deployment annotations

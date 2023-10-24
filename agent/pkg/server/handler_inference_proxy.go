@@ -21,10 +21,16 @@ import (
 // @Tags        inference-proxy
 // @Accept      json
 // @Produce     json
+// @Param       name path string true "inference id"
 // @Router      /inference/{name} [post]
 // @Router      /inference/{name} [get]
 // @Router      /inference/{name} [put]
 // @Router      /inference/{name} [delete]
+// @Success     200
+// @Failure     303
+// @Failure     400
+// @Failure     404
+// @Failure     500
 func (s *Server) handleInferenceProxy(c *gin.Context) error {
 	namespacedName := c.Param("name")
 	if namespacedName == "" {
@@ -87,7 +93,7 @@ func (s *Server) forward(c *gin.Context, namespace, name string) (int, error) {
 	}
 	defer s.endpointResolver.Close(backendURL)
 
-	proxyServer := httputil.NewSingleHostReverseProxy(&backendURL)
+	proxyServer := httputil.ReverseProxy{}
 	proxyServer.Transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -100,7 +106,6 @@ func (s *Server) forward(c *gin.Context, namespace, name string) (int, error) {
 		targetQuery := backendURL.RawQuery
 		req.URL.Scheme = backendURL.Scheme
 		req.URL.Host = backendURL.Host
-		// req.URL.Path, req.URL.RawPath = joinURLPath(target, req.URL)
 		if targetQuery == "" || req.URL.RawQuery == "" {
 			req.URL.RawQuery = targetQuery + req.URL.RawQuery
 		} else {
@@ -113,7 +118,8 @@ func (s *Server) forward(c *gin.Context, namespace, name string) (int, error) {
 
 		s.logger.WithField("url", backendURL.String()).
 			WithField("path", req.URL.Path).
-			WithField("raw-query", req.URL.RawQuery).Debug("proxying")
+			WithField("header", req.Header).
+			WithField("raw-query", req.URL.RawQuery).Debug("reverse proxy")
 	}
 
 	var statusCode int

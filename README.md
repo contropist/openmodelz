@@ -2,7 +2,6 @@
 
 # OpenModelZ
 
-One-click machine learning deployment at scale on any cluster (GCP, AWS, Lambda labs, your home lab, or even a single machine)
 </div>
 
 <p align=center>
@@ -10,23 +9,64 @@ One-click machine learning deployment at scale on any cluster (GCP, AWS, Lambda 
 <a href="https://twitter.com/TensorChord"><img src="https://img.shields.io/twitter/follow/tensorchord?style=social" alt="trackgit-views" /></a>
 <a href="https://docs.open.modelz.ai"><img src="https://img.shields.io/badge/docs.open.modelz.ai-455946.svg?style=socail&logo=googlechrome&logoColor=white" alt="docs" /></a>
 <a href="https://github.com/tensorchord/openmodelz#contributors-"><img alt="all-contributors" src="https://img.shields.io/github/all-contributors/tensorchord/openmodelz/main"></a>
+<a href="https://github.com/tensorchord/openmodelz/actions/workflows/CI.yaml"><img alt="CI" src="https://github.com/tensorchord/openmodelz/actions/workflows/CI.yaml/badge.svg"></a>
+<a href="https://badge.fury.io/py/openmodelz"><img src="https://badge.fury.io/py/openmodelz.svg" alt="PyPI version" height="20"></a>
+<a href='https://coveralls.io/github/tensorchord/openmodelz'><img src='https://coveralls.io/repos/github/tensorchord/openmodelz/badge.svg' alt='Coverage Status' /></a>
 </p>
 
-## Why use OpenModelZ
+## What is OpenModelZ?
 
-OpenModelZ is the ideal solution for practitioners who want to quickly deploy their machine learning models to a (public or private) endpoint without the hassle of spending excessive time, money, and effort to figure out the entire end-to-end process.
+OpenModelZ ( `mdz` ) is tool to deploy your models to any cluster (GCP, AWS, Lambda labs, your home lab, or even a single machine).
 
-We created OpenModelZ in response to the difficulties of finding a simple, cost-effective way to get models into production fast. Traditional deployment methods can be complex and time-consuming, requiring significant effort and resources to get models up and running.
+Getting models into production is hard for data scientists and SREs. You need to configure the monitoring, logging, and scaling infrastructure, with the right security and permissions. And then setup the domain, SSL, and load balancer. This can take weeks or months of work even for a single model deployment.
 
-- Kubernetes: Setting up and maintaining Kubernetes and Kubeflow can be challenging due to their technical complexity. Data scientists spend significant time configuring and debugging infrastructure instead of focusing on model development.
-- Managed services: Alternatively, using a managed service like AWS SageMaker can be expensive and inflexible, limiting the ability to customize deployment options.
-- Virtual machines: As an alternative, setting up a cloud VM-based solution requires learning complex infrastructure concepts like load balancers, ingress controllers, and other components. This takes a lot of specialized knowledge and resources.
+You can now use mdz deploy to effortlessly deploy your models. OpenModelZ handles all the infrastructure setup for you. Each deployment gets a public subdomain, like `http://jupyter-9pnxd.2.242.22.143.modelz.live`, making it easily accessible.
 
-With OpenModelZ, we take care of the underlying technical details for you, and provide a simple and easy-to-use CLI to deploy your models to **any cloud (GCP, AWS, or others), your home lab, or even a single machine**.
+<p align=center>
+<img src="https://user-images.githubusercontent.com/5100735/260630222-46e26e54-50c6-43ba-b3ea-2e64dd276f87.png" alt="OpenModelZ" width="1000"/>
+</p>
 
-You could **start from a single machine and scale it up to a cluster of machines** without any hassle. Besides this, We **provision a separate subdomain for each deployment** without any extra cost and effort, making each deployment easily accessible from the outside.
+## Benefits
 
-OpenModelZ forms the core of our [ModelZ](https://modelz.ai) platform, which is a serverless machine learning inference service. It is utilized in a production environment to provision models for our clients.
+OpenModelZ provides the following features out-of-the-box:
+
+- 📈 **Auto-scaling from 0**: The number of inference servers could be scaled based on the workload. You could start from 0 and scale it up to 10+ replicas easily.
+- 📦 **Support any machine learning framework**: You could deploy any machine learning framework (e.g. [vLLM](https://github.com/vllm-project/vllm)/[triton-inference-server](https://github.com/triton-inference-server/server)/[mosec](https://github.com/mosecorg/mosec) etc.) with a single command. Besides, you could also deploy your own custom inference server.
+- 🔬 **Gradio/Streamlit/Jupyter support**: We provide a robust prototyping environment with support for [Gradio](https://gradio.app), [Streamlit](https://streamlit.io/), [jupyter](https://jupyter.org/) and so on. You could visualize your model's performance and debug it easily in the notebook, or deploy a web app for your model with a single command.
+- 🏃 **Start from a single machine to a cluster of machines**: You could start from a single machine and scale it up to a cluster of machines without any hassle, with a single command `mdz server start`.
+- 🚀 **Public accessible subdomain for each deployment** ( optional ) : We provision a separate subdomain for each deployment without any extra cost and effort, making each deployment easily accessible from the outside.
+
+OpenModelZ is the foundational component of the ModelZ platform available at [modelz.ai](https://modelz.ai).
+
+## How it works
+
+Get a server (could be a cloud VM, a home lab, or even a single machine) and run the `mdz server start` command. OpenModelZ will bootstrap the server for you.
+
+```text
+$ mdz server start
+🚧 Creating the server...
+🚧 Initializing the load balancer...
+🚧 Initializing the GPU resource...
+🚧 Initializing the server...
+🚧 Waiting for the server to be ready...
+🐋 Checking if the server is running...
+🐳 The server is running at http://146.235.213.84.modelz.live
+🎉 You could set the environment variable to get started!
+
+export MDZ_URL=http://146.235.213.84.modelz.live
+$ export MDZ_URL=http://146.235.213.84.modelz.live
+```
+
+Then you could deploy your model with a single command `mdz deploy` and get the endpoint:
+
+```
+$ mdz deploy --image modelzai/gradio-stable-diffusion:23.03 --name sdw --port 7860 --gpu 1
+Inference sd is created
+$ mdz list
+ NAME  ENDPOINT                                                 STATUS  INVOCATIONS  REPLICAS 
+ sdw   http://sdw-qh2n0y28ybqc36oc.146.235.213.84.modelz.live   Ready           174  1/1      
+       http://146.235.213.84.modelz.live/inference/sdw.default                                
+```
 
 ## Quick Start 🚀
 
@@ -207,6 +247,25 @@ $ mdz server label node3 gpu=true type=nvidia-a100
 $ mdz deploy ... --node-labels gpu=true,type=nvidia-a100
 ```
 
+## Architecture
+
+OpenModelZ is inspired by the [k3s](https://github.com/k3s-io/k3s) and [OpenFaaS](https://github.com/openfaas), but designed specifically for machine learning deployment. We keep the core of the system **simple, and easy to extend**.
+
+You do not need to read this section if you just want to deploy your models. But if you want to understand how OpenModelZ works, this section is for you.
+
+<p align=center>
+<img src="https://user-images.githubusercontent.com/5100735/260627792-2e89f6b8-006c-4807-84a3-29b6785af812.png" alt="OpenModelZ" width="500"/>
+</p>
+
+OpenModelZ is composed of two components:
+
+- Data Plane: The data plane is responsible for the servers. You could use `mdz server` to manage the servers. The data plane is designed to be **stateless** and **scalable**. You could easily scale the data plane by adding more servers to the cluster. It uses k3s under the hood, to support VMs, bare-metal, and IoT devices (in the future). You could also deploy OpenModelZ on a existing kubernetes cluster.
+- Control Plane: The control plane is responsible for the deployments. It manages the deployments and the underlying resources.
+
+A request will be routed to the inference servers by the load balancer. And the autoscaler will scale the number of inference servers based on the workload. We provide a domain `*.modelz.live` by default, with the help of a [wildcard DNS server](https://github.com/cunnie/sslip.io) to support the public accessible subdomain for each deployment. You could also use your own domain.
+
+You could check out the [architecture](https://docs.open.modelz.ai/architecture) documentation for more details.
+
 ## Roadmap 🗂️
 
 Please checkout [ROADMAP](https://docs.open.modelz.ai/community).
@@ -230,10 +289,11 @@ We welcome all kinds of contributions from the open-source community, individual
       <td align="center" valign="top" width="14.28%"><a href="https://blog.mapotofu.org/"><img src="https://avatars.githubusercontent.com/u/12974685?v=4?s=70" width="70px;" alt="Keming"/><br /><sub><b>Keming</b></sub></a><br /><a href="https://github.com/tensorchord/openmodelz/commits?author=kemingy" title="Code">💻</a> <a href="#design-kemingy" title="Design">🎨</a> <a href="#infra-kemingy" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://manjusaka.itscoder.com/"><img src="https://avatars.githubusercontent.com/u/7054676?v=4?s=70" width="70px;" alt="Nadeshiko Manju"/><br /><sub><b>Nadeshiko Manju</b></sub></a><br /><a href="https://github.com/tensorchord/openmodelz/issues?q=author%3AZheaoli" title="Bug reports">🐛</a> <a href="#design-Zheaoli" title="Design">🎨</a> <a href="#ideas-Zheaoli" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/tddschn"><img src="https://avatars.githubusercontent.com/u/45612704?v=4?s=70" width="70px;" alt="Teddy Xinyuan Chen"/><br /><sub><b>Teddy Xinyuan Chen</b></sub></a><br /><a href="https://github.com/tensorchord/openmodelz/commits?author=tddschn" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://page.codespaper.com"><img src="https://avatars.githubusercontent.com/u/3764335?v=4?s=70" width="70px;" alt="Wei Zhang"/><br /><sub><b>Wei Zhang</b></sub></a><br /><a href="https://github.com/tensorchord/openmodelz/commits?author=zwpaper" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://xuanwo.io/"><img src="https://avatars.githubusercontent.com/u/5351546?v=4?s=70" width="70px;" alt="Xuanwo"/><br /><sub><b>Xuanwo</b></sub></a><br /><a href="#content-Xuanwo" title="Content">🖋</a> <a href="#design-Xuanwo" title="Design">🎨</a> <a href="#ideas-Xuanwo" title="Ideas, Planning, & Feedback">🤔</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cutecutecat"><img src="https://avatars.githubusercontent.com/u/19801166?v=4?s=70" width="70px;" alt="cutecutecat"/><br /><sub><b>cutecutecat</b></sub></a><br /><a href="#ideas-cutecutecat" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
     <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cutecutecat"><img src="https://avatars.githubusercontent.com/u/19801166?v=4?s=70" width="70px;" alt="cutecutecat"/><br /><sub><b>cutecutecat</b></sub></a><br /><a href="#ideas-cutecutecat" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://xieydd.github.io/"><img src="https://avatars.githubusercontent.com/u/20329697?v=4?s=70" width="70px;" alt="xieydd"/><br /><sub><b>xieydd</b></sub></a><br /><a href="#ideas-xieydd" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>

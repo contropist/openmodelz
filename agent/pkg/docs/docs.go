@@ -20,6 +20,62 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/gradio/{id}": {
+            "get": {
+                "description": "Reverse proxy to the backend gradio.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Reverse proxy to the backend gradio.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            },
+            "post": {
+                "description": "Reverse proxy to the backend gradio.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Reverse proxy to the backend gradio.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
         "/healthz": {
             "get": {
                 "description": "Healthz",
@@ -53,7 +109,32 @@ const docTemplate = `{
                     "inference-proxy"
                 ],
                 "summary": "Inference.",
-                "responses": {}
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "inference id",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "303": {
+                        "description": "See Other"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
             },
             "put": {
                 "description": "Inference proxy.",
@@ -67,7 +148,32 @@ const docTemplate = `{
                     "inference-proxy"
                 ],
                 "summary": "Inference.",
-                "responses": {}
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "inference id",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "303": {
+                        "description": "See Other"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
             },
             "post": {
                 "description": "Inference proxy.",
@@ -81,7 +187,32 @@ const docTemplate = `{
                     "inference-proxy"
                 ],
                 "summary": "Inference.",
-                "responses": {}
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "inference id",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "303": {
+                        "description": "See Other"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
             },
             "delete": {
                 "description": "Inference proxy.",
@@ -95,7 +226,231 @@ const docTemplate = `{
                     "inference-proxy"
                 ],
                 "summary": "Inference.",
-                "responses": {}
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "inference id",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "303": {
+                        "description": "See Other"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/mosec/{id}": {
+            "get": {
+                "description": "Proxy to the backend mosec.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Proxy to the backend mosec.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/mosec/{id}/inference": {
+            "post": {
+                "description": "Proxy to the backend mosec.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Proxy to the backend mosec.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/mosec/{id}/metrics": {
+            "get": {
+                "description": "Proxy to the backend mosec.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Proxy to the backend mosec.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/other/{id}": {
+            "get": {
+                "description": "Reverse proxy to the backend other.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Reverse proxy to the backend other.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            },
+            "post": {
+                "description": "Reverse proxy to the backend other.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Reverse proxy to the backend other.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/streamlit/{id}": {
+            "get": {
+                "description": "Reverse proxy to streamlit.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Reverse proxy to streamlit.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            },
+            "post": {
+                "description": "Reverse proxy to streamlit.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Reverse proxy to streamlit.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deployment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
             }
         },
         "/system/build": {
@@ -114,7 +469,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -182,7 +536,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -190,7 +543,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "\"e50886f3-caa6-449f-9fa8-7849c6ba2e08\"",
                         "description": "inference id",
                         "name": "name",
                         "in": "path",
@@ -202,6 +554,40 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/types.Build"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/image-cache": {
+            "post": {
+                "description": "Create the image cache.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "image-cache"
+                ],
+                "summary": "Create the image cache.",
+                "parameters": [
+                    {
+                        "description": "image-cache",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ImageCache"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/types.ImageCache"
                         }
                     }
                 }
@@ -223,7 +609,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -231,7 +616,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "\"e50886f3-caa6-449f-9fa8-7849c6ba2e08\"",
                         "description": "inference id",
                         "name": "name",
                         "in": "path",
@@ -243,6 +627,55 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/types.InferenceDeployment"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/inference/{name}/instance/{instance}": {
+            "post": {
+                "description": "Attach to the inference instance.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inference"
+                ],
+                "summary": "Attach to the inference instance.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Namespace",
+                        "name": "namespace",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Instance name",
+                        "name": "instance",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.InferenceDeployment"
+                            }
                         }
                     }
                 }
@@ -264,7 +697,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -307,7 +739,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -350,7 +781,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -422,7 +852,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -478,7 +907,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -511,7 +939,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "\"2023-04-01T00:06:31+08:00\"",
                         "description": "Since",
                         "name": "since",
                         "in": "query"
@@ -546,7 +973,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -579,14 +1005,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "\"2023-04-01T00:06:31+08:00\"",
                         "description": "Since",
                         "name": "since",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "example": "\"2023-05-31T00:06:31+08:00\"",
                         "description": "End",
                         "name": "end",
                         "in": "query"
@@ -661,6 +1085,38 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Delete the namespace.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "namespace"
+                ],
+                "summary": "Delete the namespace.",
+                "parameters": [
+                    {
+                        "description": "Namespace name",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.NamespaceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.NamespaceRequest"
+                        }
+                    }
+                }
             }
         },
         "/system/scale-inference": {
@@ -679,7 +1135,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"modelz-d3524a71-c17c-4c92-8faf-8603f02f4713\"",
                         "description": "Namespace",
                         "name": "namespace",
                         "in": "query",
@@ -704,12 +1159,128 @@ const docTemplate = `{
                                 "$ref": "#/definitions/types.ScaleServiceRequest"
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
+        "/system/server/{name}/delete": {
+            "delete": {
+                "description": "Delete a node.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "namespace"
+                ],
+                "summary": "Delete a node from the cluster.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Server Name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/system/server/{name}/labels": {
+            "post": {
+                "description": "List the servers.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "namespace"
+                ],
+                "summary": "List the servers.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Server Name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query params",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ServerSpec"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/system/servers": {
+            "get": {
+                "description": "List the servers.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "namespace"
+                ],
+                "summary": "List the servers.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.Server"
+                            }
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
+        "types.AuthN": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "types.Build": {
             "type": "object",
             "properties": {
@@ -724,10 +1295,55 @@ const docTemplate = `{
         "types.BuildSpec": {
             "type": "object",
             "properties": {
+                "authn": {
+                    "$ref": "#/definitions/types.AuthN"
+                },
                 "branch": {
                     "type": "string"
                 },
+                "buildTarget": {
+                    "$ref": "#/definitions/types.BuildTarget"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "image_tag": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "repository": {
+                    "description": "repository is the URL",
+                    "type": "string"
+                },
+                "revision": {
+                    "description": "revision is the commit hash for the specified revision.\n+optional",
+                    "type": "string"
+                },
+                "secret_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.BuildStatus": {
+            "type": "object",
+            "properties": {
+                "phase": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.BuildTarget": {
+            "type": "object",
+            "properties": {
                 "builder": {
+                    "type": "string"
+                },
+                "digest": {
                     "type": "string"
                 },
                 "directory": {
@@ -743,32 +1359,10 @@ const docTemplate = `{
                 "image_tag": {
                     "type": "string"
                 },
-                "name": {
+                "registry": {
                     "type": "string"
                 },
-                "namespace": {
-                    "type": "string"
-                },
-                "project_id": {
-                    "type": "string"
-                },
-                "repository": {
-                    "description": "repository is the URL",
-                    "type": "string"
-                },
-                "revision": {
-                    "description": "revision is the commit hash for the specified revision.\n+optional",
-                    "type": "string"
-                }
-            }
-        },
-        "types.BuildStatus": {
-            "type": "object",
-            "properties": {
-                "image": {
-                    "type": "string"
-                },
-                "phase": {
+                "registry_token": {
                     "type": "string"
                 }
             }
@@ -777,6 +1371,27 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "functionName": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.ImageCache": {
+            "type": "object",
+            "properties": {
+                "force_full_cache": {
+                    "type": "boolean"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name is the name of the inference.",
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "node_selector": {
                     "type": "string"
                 }
             }
@@ -822,6 +1437,10 @@ const docTemplate = `{
                 },
                 "framework": {
                     "description": "Framework is the inference framework.",
+                    "type": "string"
+                },
+                "http_probe_path": {
+                    "description": "HTTPProbePath is the path of the http probe.",
                     "type": "string"
                 },
                 "image": {
@@ -944,6 +1563,31 @@ const docTemplate = `{
                 }
             }
         },
+        "types.NodeSystemInfo": {
+            "type": "object",
+            "properties": {
+                "architecture": {
+                    "description": "The Architecture reported by the node",
+                    "type": "string"
+                },
+                "kernelVersion": {
+                    "description": "Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).",
+                    "type": "string"
+                },
+                "machineID": {
+                    "description": "MachineID reported by the node. For unique machine identification\nin the cluster this field is preferred. Learn more from man(5)\nmachine-id: http://man7.org/linux/man-pages/man5/machine-id.5.html",
+                    "type": "string"
+                },
+                "operatingSystem": {
+                    "description": "The Operating System reported by the node",
+                    "type": "string"
+                },
+                "osImage": {
+                    "description": "OS Image reported by the node from /etc/os-release (e.g. Debian GNU/Linux 7 (wheezy)).",
+                    "type": "string"
+                }
+            }
+        },
         "types.ProviderInfo": {
             "type": "object",
             "properties": {
@@ -980,6 +1624,9 @@ const docTemplate = `{
         "types.ScaleServiceRequest": {
             "type": "object",
             "properties": {
+                "attempt": {
+                    "type": "integer"
+                },
                 "eventMessage": {
                     "type": "string"
                 },
@@ -1020,6 +1667,48 @@ const docTemplate = `{
                 }
             }
         },
+        "types.Server": {
+            "type": "object",
+            "properties": {
+                "spec": {
+                    "$ref": "#/definitions/types.ServerSpec"
+                },
+                "status": {
+                    "$ref": "#/definitions/types.ServerStatus"
+                }
+            }
+        },
+        "types.ServerSpec": {
+            "type": "object",
+            "properties": {
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.ServerStatus": {
+            "type": "object",
+            "properties": {
+                "allocatable": {
+                    "$ref": "#/definitions/types.ResourceList"
+                },
+                "capacity": {
+                    "$ref": "#/definitions/types.ResourceList"
+                },
+                "phase": {
+                    "type": "string"
+                },
+                "system": {
+                    "$ref": "#/definitions/types.NodeSystemInfo"
+                }
+            }
+        },
         "types.VersionInfo": {
             "type": "object",
             "properties": {
@@ -1054,9 +1743,9 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "v0.0.12",
+	Version:          "v0.0.23",
 	Host:             "localhost:8081",
-	BasePath:         "",
+	BasePath:         "/",
 	Schemes:          []string{"http"},
 	Title:            "modelz cluster agent",
 	Description:      "modelz kubernetes cluster agent",

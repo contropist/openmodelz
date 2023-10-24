@@ -7,13 +7,13 @@ on:
     paths:
       - '.github/workflows/**'
       - '**.go'
-      - 'Makefile'
+      - '**/Makefile'
       - 'go.**'
   pull_request:
     paths:
       - '.github/workflows/**'
       - '**.go'
-      - 'Makefile'
+      - '**/Makefile'
       - 'go.**'
 
 concurrency:
@@ -31,12 +31,12 @@ jobs:
         uses: crate-ci/typos@v1.16.2
         with:
           config: ./typos.toml
-
   test:
     name: test
     strategy:
       matrix:
         os: [ubuntu-latest]
+        dir: ["agent", "autoscaler", "ingress-operator", "mdz", "modelzetes"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out code
@@ -45,29 +45,73 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.19
-      - name: Cache Go modules
-        uses: actions/cache@preview
+      - uses: actions/cache@v3
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: modelzetes test
+            ${{ runner.os }}-go-
+      - name: test
         run: |
-          cd modelzetes
-          go test ./...
+          cd ${{ matrix.dir }}
+          make fmt
+          git diff --exit-code || (echo 'Please run "make fmt" to format code' && exit 1);
           make
-      - name: autoscaler
+          go test -race -coverprofile=${{ matrix.dir }}.out -covermode=atomic ./...
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.dir }}-out
+          path: ${{ matrix.dir }}/${{ matrix.dir }}.out
+  report:
+    needs:
+      - test
+      - typos-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.19
+      - name: Install bins
         run: |
-          cd ./autoscaler
-          make
-      - name: agent
+          go install github.com/mattn/goveralls@latest
+      - name: Get agent coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: agent-out
+          path: merge
+      - name: Get autoscaler coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: autoscaler-out
+          path: merge
+      - name: Get ingress-operator coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: ingress-operator-out
+          path: merge
+      - name: Get mdz coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: mdz-out
+          path: merge
+      - name: Get modelzetes coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: modelzetes-out
+          path: merge
+      - name: Merge all coverage reports
+        uses: cutecutecat/go-cover-merge@v1
+        with:
+          input_dir: merge
+          output_file: final.out
+      - name: Send coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd ./agent
-          make
-      - name: mdz
-        run: |
-          cd ./mdz
-          make
+          goveralls -coverprofile=final.out -service=github

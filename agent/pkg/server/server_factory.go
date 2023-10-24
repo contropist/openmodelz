@@ -1,15 +1,14 @@
 package server
 
 import (
-	"context"
 	"net/http"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/tensorchord/openmodelz/agent/pkg/query"
+	"github.com/tensorchord/openmodelz/agent/client"
 	ginlogrus "github.com/toorop/gin-logrus"
 
 	"github.com/tensorchord/openmodelz/agent/pkg/config"
@@ -48,11 +47,15 @@ type Server struct {
 	config config.Config
 
 	eventRecorder event.Interface
+
+	modelzCloudClient *client.Client
+
+	cache ristretto.Cache
 }
 
 func New(c config.Config) (Server, error) {
 	router := gin.New()
-	router.Use(ginlogrus.Logger(logrus.StandardLogger()))
+	router.Use(ginlogrus.Logger(logrus.StandardLogger(), "/healthz"))
 	router.Use(gin.Recovery())
 
 	// metrics server
@@ -82,15 +85,24 @@ func New(c config.Config) (Server, error) {
 		prometheusClient: promCli,
 	}
 
-	if s.config.DB.EventEnabled {
+	cache, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters: 1e7,
+		MaxCost:     1 << 28,
+		BufferItems: 64,
+	})
+	if err != nil {
+		return s, err
+	}
+	s.cache = *cache
+
+	if s.config.ModelZCloud.EventEnabled {
 		logrus.Info("Event recording is enabled")
-		// Connect to database
-		conn, err := pgxpool.Connect(context.Background(), c.DB.URL)
+		cli, err := client.NewClientWithOpts(
+			client.WithHost(s.config.ModelZCloud.URL))
 		if err != nil {
-			return s, errors.Wrap(err, "failed to connect to database")
+			return s, errors.Wrap(err, "failed to create modelz cloud client")
 		}
-		queries := query.New(conn)
-		s.eventRecorder = event.NewEventRecorder(queries)
+		s.eventRecorder = event.NewEventRecorder(cli, s.config.ModelZCloud.AgentToken)
 	} else {
 		s.eventRecorder = event.NewFake()
 	}
@@ -99,6 +111,13 @@ func New(c config.Config) (Server, error) {
 	s.registerMetricsRoutes()
 	if err := s.initKubernetesResources(); err != nil {
 		return s, err
+	}
+
+	if c.ModelZCloud.Enabled {
+		err := s.initModelZCloud(c.ModelZCloud.URL, c.ModelZCloud.AgentToken, c.ModelZCloud.Region)
+		if err != nil {
+			return s, err
+		}
 	}
 	if err := s.initMetrics(); err != nil {
 		return s, err

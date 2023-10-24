@@ -3,6 +3,7 @@ package k8s
 import (
 	"github.com/tensorchord/openmodelz/agent/api/types"
 	"github.com/tensorchord/openmodelz/modelzetes/pkg/apis/modelzetes/v2alpha1"
+	"github.com/tensorchord/openmodelz/modelzetes/pkg/consts"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
@@ -57,23 +58,47 @@ func AsInferenceDeployment(inf *v2alpha1.Inference, item *appsv1.Deployment) *ty
 		res.Status.CreatedAt = &item.CreationTimestamp.Time
 		res.Status.InvocationCount = 0
 		res.Status.AvailableReplicas = item.Status.AvailableReplicas
-
-		res.Status.Phase = types.PhaseNotReady
-		for _, c := range item.Status.Conditions {
-			if c.Type == appsv1.DeploymentAvailable && c.Status == v1.ConditionTrue {
-				res.Status.Phase = types.PhaseReady
-			} else if c.Type == appsv1.DeploymentProgressing && c.Status == v1.ConditionFalse {
-				res.Status.Phase = types.PhaseScaling
-			}
-		}
-
-		if item.Spec.Replicas != nil && *item.Spec.Replicas == 0 {
-			res.Status.Phase = types.PhaseNoReplicas
-		}
-
-		if item.DeletionTimestamp != nil {
-			res.Status.Phase = types.PhaseTerminating
-		}
+		res.Status.Phase = AsStatusPhase(item)
 	}
 	return res
+}
+
+func AsResourceList(resources v1.ResourceList) types.ResourceList {
+	res := types.ResourceList{}
+	gpuResource := resources[consts.ResourceNvidiaGPU]
+	gpuPtr := &gpuResource
+
+	if !resources.Cpu().IsZero() {
+		res[types.ResourceCPU] = types.Quantity(
+			resources.Cpu().String())
+	}
+	if !resources.Memory().IsZero() {
+		res[types.ResourceMemory] = types.Quantity(
+			resources.Memory().String())
+	}
+	if !gpuPtr.IsZero() {
+		res[types.ResourceGPU] = types.Quantity(
+			gpuPtr.String())
+	}
+	return res
+}
+
+func AsStatusPhase(item *appsv1.Deployment) types.Phase {
+	phase := types.PhaseNotReady
+	for _, c := range item.Status.Conditions {
+		if c.Type == appsv1.DeploymentAvailable && c.Status == v1.ConditionTrue {
+			phase = types.PhaseReady
+		} else if c.Type == appsv1.DeploymentProgressing && c.Status == v1.ConditionFalse {
+			phase = types.PhaseScaling
+		}
+	}
+
+	if item.Spec.Replicas != nil && *item.Spec.Replicas == 0 {
+		phase = types.PhaseNoReplicas
+	}
+
+	if item.DeletionTimestamp != nil {
+		phase = types.PhaseTerminating
+	}
+	return phase
 }

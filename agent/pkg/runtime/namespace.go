@@ -8,14 +8,14 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/tensorchord/openmodelz/agent/api/types"
 	"github.com/tensorchord/openmodelz/agent/errdefs"
+	"github.com/tensorchord/openmodelz/modelzetes/pkg/consts"
 )
 
-func (r Runtime) NamespaceList(ctx context.Context) ([]string, error) {
+func (r generalRuntime) NamespaceList(ctx context.Context) ([]string, error) {
 	ns, err := r.kubeClient.CoreV1().Namespaces().List(ctx,
 		metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=true", types.LabelNamespace),
+			LabelSelector: fmt.Sprintf("%s=true", consts.LabelNamespace),
 		})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -32,12 +32,12 @@ func (r Runtime) NamespaceList(ctx context.Context) ([]string, error) {
 	return res, nil
 }
 
-func (r Runtime) NamespaceCreate(ctx context.Context, name string) error {
+func (r generalRuntime) NamespaceCreate(ctx context.Context, name string) error {
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
-				types.LabelNamespace: "true",
+				consts.LabelNamespace: "true",
 			},
 		},
 	}
@@ -52,4 +52,18 @@ func (r Runtime) NamespaceCreate(ctx context.Context, name string) error {
 	}
 
 	return nil
+}
+
+func (r generalRuntime) NamespaceGet(ctx context.Context, name string) bool {
+	_, err := r.kubeClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func (r generalRuntime) NamespaceDelete(ctx context.Context, name string) error {
+	err := r.kubeClient.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+	return err
 }
